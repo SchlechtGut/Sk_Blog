@@ -1,7 +1,7 @@
 package com.example.sk_blog.controller;
 
 import com.example.sk_blog.api.response.InitResponse;
-import com.example.sk_blog.api.response.GlobalSettingsProperty;
+import com.example.sk_blog.api.response.SettingsResponse;
 import com.example.sk_blog.service.ApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/")
 public class ApiGeneralController {
 
-    ApiService apiService;
+    private final ApiService apiService;
 
     @Autowired
     public ApiGeneralController(ApiService apiService) {
@@ -21,11 +21,11 @@ public class ApiGeneralController {
 
     @GetMapping("init")
     public InitResponse init() {
-        return apiService.getApiInitProviderProperties();
+        return apiService.getInitResponse();
     }
 
     @GetMapping("settings")
-    public GlobalSettingsProperty settings() {
+    public SettingsResponse settings() {
         return apiService.getGlobalSettings();
     }
 }

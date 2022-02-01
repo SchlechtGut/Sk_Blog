@@ -4,15 +4,15 @@ import com.example.sk_blog.model.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthProperties {
+public class AuthResponse {
     private boolean result;
     private User user;
 
-    public AuthProperties(boolean result) {
+    public AuthResponse(boolean result) {
         this.result = result;
     }
 
-    public AuthProperties(boolean result, User user) {
+    public AuthResponse(boolean result, User user) {
         this.result = result;
         this.user = user;
     }

@@ -1,6 +1,6 @@
 package com.example.sk_blog.controller;
 
-import com.example.sk_blog.api.response.AuthProperties;
+import com.example.sk_blog.api.response.AuthResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +12,7 @@ public class ApiAuthController {
 
     @GetMapping("check")
     @ResponseBody
-    public AuthProperties authCheck() {
-        return new AuthProperties(false);
+    public AuthResponse authCheck() {
+        return new AuthResponse(false);
     }
 }
