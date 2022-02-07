@@ -1,38 +1,48 @@
 package com.example.sk_blog.model;
 
 import com.example.sk_blog.model.enums.ModerationStatus;
+import com.example.sk_blog.service.PostService;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Set;
+
 
 @Entity
 @Table(name = "posts")
+@JsonPropertyOrder({ "id", "timestamp", "user", "title", "announce", "likeCount", "dislikeCount", "commentCount", "viewCount" })
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(name = "is_active", columnDefinition = "tinyint")
-    @NotNull
-    private boolean isActive;
+    @JsonIgnore
+    private Integer isActive;
 
     @Column(name = "moderation_status", columnDefinition = "varchar(50) default 'NEW'")
     @NotNull
+    @JsonIgnore
     private ModerationStatus moderationStatus;
 
     @Column(name = "moderator_id")
-    private int moderatorId;
+    @JsonIgnore
+    private Integer moderatorId;
 
-    @NotNull
-    private Date time;
+//    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
+    @JsonSerialize(using = PostService.CustomDateSerializer.class)
+    @JsonProperty("timestamp")
+    private LocalDateTime time;
 
     @NotNull
     private String title;
 
     @Column(columnDefinition = "text")
     @NotNull
+    @JsonIgnore
     private String text;
 
     @Column(name = "view_count")
@@ -44,15 +54,26 @@ public class Post {
     private User user;
 
     @OneToMany(mappedBy = "post")
+    @JsonIgnore
     private Set<PostVote> postVotes;
 
     @OneToMany(mappedBy = "post")
+    @JsonIgnore
     private Set<PostComment> postComments;
 
     @ManyToMany(mappedBy = "posts")
+    @JsonIgnore
     private Set<Tag> tags;
+    ////////////////////////// json additional properties
 
-
+    @Transient
+    private int likeCount;
+    @Transient
+    private int dislikeCount;
+    @Transient
+    private int commentCount;
+    @Transient
+    private String announce;
 
 
     public int getId() {
@@ -63,11 +84,11 @@ public class Post {
         this.id = id;
     }
 
-    public boolean isActive() {
+    public Integer isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Integer active) {
         isActive = active;
     }
 
@@ -79,19 +100,19 @@ public class Post {
         this.moderationStatus = moderationStatus;
     }
 
-    public int getModeratorId() {
+    public Integer getModeratorId() {
         return moderatorId;
     }
 
-    public void setModeratorId(int moderatorId) {
+    public void setModeratorId(Integer moderatorId) {
         this.moderatorId = moderatorId;
     }
 
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 
-    public void setTime(Date time) {
+    public void setTime(LocalDateTime time) {
         this.time = time;
     }
 
@@ -149,5 +170,45 @@ public class Post {
 
     public void setTags(Set<Tag> tags) {
         this.tags = tags;
+    }
+
+    public Integer getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Integer isActive) {
+        this.isActive = isActive;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public int getDislikeCount() {
+        return dislikeCount;
+    }
+
+    public void setDislikeCount(int dislikeCount) {
+        this.dislikeCount = dislikeCount;
+    }
+
+    public int getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(int commentCount) {
+        this.commentCount = commentCount;
+    }
+
+    public String getAnnounce() {
+        return announce;
+    }
+
+    public void setAnnounce(String announce) {
+        this.announce = announce;
     }
 }

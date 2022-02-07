@@ -1,32 +1,40 @@
 package com.example.sk_blog.service;
 
 import com.example.sk_blog.api.response.PostResponse;
+import com.example.sk_blog.api.response.TagResponse;
 import com.example.sk_blog.model.GlobalSetting;
 import com.example.sk_blog.api.response.InitResponse;
 import com.example.sk_blog.api.response.SettingsResponse;
+import com.example.sk_blog.model.Post;
+import com.example.sk_blog.model.PostVote;
+import com.example.sk_blog.model.Tag;
+import com.example.sk_blog.model.enums.ModerationStatus;
 import com.example.sk_blog.repositories.GlobalSettingsRepository;
 import com.example.sk_blog.repositories.PostRepository;
+import com.example.sk_blog.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
 
 @Service
 public class ApiService {
     private final GlobalSettingsRepository globalSettingsRepository;
     private final PostRepository postRepository;
     private final InitResponse initResponse;
+    private final TagRepository tagRepository;
 
     @Autowired
-    public ApiService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse) {
+    public ApiService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository) {
         this.globalSettingsRepository = globalSettingsRepository;
         this.postRepository = postRepository;
         this.initResponse = initResponse;
+        this.tagRepository = tagRepository;
     }
 
     public InitResponse getInitResponse() {
@@ -76,10 +84,75 @@ public class ApiService {
             default: nextPage = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "time"));
         }
 
-         int size = nextPage.getPageSize();
+        PostResponse postResponse = new PostResponse(postRepository.getPostByIsActiveEqualsAndModerationStatusEquals(1, ModerationStatus.ACCEPTED, nextPage).getContent());
 
-        System.out.println(size);
+        List<Post> posts = postResponse.getPosts();
 
-        return new PostResponse(postRepository.findAll(nextPage).getContent()) ;
+        for (Post post : posts) {
+            post.setCommentCount(post.getPostComments().size());
+
+            String announce;
+
+            if (post.getText().length() > 150) {
+                announce = post.getText().substring(0, 150);
+                announce = announce.concat("...");
+            } else {
+                announce = post.getText();
+            }
+
+            post.setAnnounce(announce);
+
+            int likeCount = 0;
+            int dislikeCount = 0;
+
+            for (PostVote postVote  : post.getPostVotes()) {
+                if (postVote.getValue() == 1) {
+                    likeCount++;
+                } else {
+                    dislikeCount++;
+                }
+            }
+
+            post.setLikeCount(likeCount);
+            post.setDislikeCount(dislikeCount);
+
+
+            System.out.println(post.getTime().toEpochSecond(ZoneOffset.UTC) + " " + post.getTime());
+
+        }
+
+        return new PostResponse(postRepository.getPostByIsActiveEqualsAndModerationStatusEquals(1, ModerationStatus.ACCEPTED, nextPage).getContent()) ;
+    }
+
+    public TagResponse getTags(String query) {
+
+        double allActivePostCount = postRepository.getAllByTimeBefore(LocalDateTime.now()).size();
+        List<Tag> allTags = tagRepository.findAll();
+        TagResponse tagResponse;
+        Tag mostPopularTag;
+        double k;
+
+        allTags.sort((a, b) -> b.getPosts().size() - a.getPosts().size());
+        mostPopularTag = allTags.get(0);
+        k = mostPopularTag.getPosts().size() / allActivePostCount / 1;
+
+        if (query == null) {
+            tagResponse = new TagResponse(allTags);
+
+            for (Tag tag : tagResponse.getTags()) {
+                tag.setWeight(k * tag.getPosts().size() / allActivePostCount);
+            }
+
+        } else {
+            tagResponse = new TagResponse(tagRepository.getAllByNameStartingWith(query));
+
+            tagResponse.getTags().sort((a, b) -> b.getPosts().size() - a.getPosts().size());
+
+            for (Tag tag : tagResponse.getTags()) {
+                tag.setWeight(k * tag.getPosts().size() / allActivePostCount);
+            }
+        }
+
+        return tagResponse;
     }
 }
