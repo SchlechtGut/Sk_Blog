@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/sk_blog?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/sk_blog?createDatabaseIfNotExist=true&serverTimezone=Etc/GMT-6&useLegacyDatetimeCode=false
     username: root
     password: Gold2014
   jpa:

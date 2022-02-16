@@ -6,13 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/")
+@RequestMapping
 public class DefaultController {
 
-
-
-    @GetMapping
+    @GetMapping()
     public String home() {
-        return "index.html";
+        return "index";
     }
 }
