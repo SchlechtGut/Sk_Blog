@@ -14,7 +14,7 @@ public class PostComment {
     private int id;
 
     @Column(name = "parent_id")
-    private int parentId;
+    private Integer parentId;
 
     @Column
     @NotNull
@@ -31,4 +31,52 @@ public class PostComment {
     @ManyToOne
     @JoinColumn(name="post_id", nullable=false)
     private Post post;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Integer getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Integer parentId) {
+        this.parentId = parentId;
+    }
+
+    public Date getTime() {
+        return time;
+    }
+
+    public void setTime(Date time) {
+        this.time = time;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Post getPost() {
+        return post;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+    }
 }

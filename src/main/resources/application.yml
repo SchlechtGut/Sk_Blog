@@ -11,6 +11,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     generate-ddl: false
+  sql:
+    init:
+      mode: never
+
+
 
 
 
