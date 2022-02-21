@@ -25,9 +25,13 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-//    public Page<Post> getPageOfPosts() {
-//
-//    }
+
+
+
+
+
+
+
 
     public static class CustomDateSerializer extends StdSerializer<LocalDateTime> {
 
@@ -41,7 +45,7 @@ public class PostService {
 
         @Override
         public void serialize(LocalDateTime localDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            jsonGenerator.writeNumber(localDateTime.toEpochSecond(ZoneOffset.UTC));
+            jsonGenerator.writeNumber(localDateTime.toEpochSecond(ZoneOffset.ofHours(3)));
         }
     }
 

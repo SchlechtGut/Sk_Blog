@@ -15,6 +15,11 @@ public class PostResponse {
         count = posts.size();
     }
 
+    public PostResponse(int count, List<Post> posts) {
+        this.count = count;
+        this.posts = posts;
+    }
+
     public int getCount() {
         return count;
     }

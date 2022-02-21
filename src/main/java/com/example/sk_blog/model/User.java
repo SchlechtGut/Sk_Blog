@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @JsonIncludeProperties({ "id", "name" })
@@ -14,14 +14,13 @@ import java.util.Set;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(name = "is_moderator", columnDefinition = "tinyint")
     private Integer isModerator;
 
     @Column(name = "reg_time")
-    @NotNull
-    private Date regTime;
+    private LocalDateTime regTime;
 
     @Column(columnDefinition = "varchar(255)")
     @NotNull
@@ -53,11 +52,23 @@ public class User {
     @OneToMany(mappedBy="user")
     private Set<PostComment> postComments;
 
-    public int getId() {
+    public User(Integer isModerator, LocalDateTime regTime, String name, String email, String password) {
+        this.isModerator = isModerator;
+        this.regTime = regTime;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+    }
+
+    public User() {
+
+    }
+
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -69,11 +80,11 @@ public class User {
         this.isModerator = isModerator;
     }
 
-    public Date getRegTime() {
+    public LocalDateTime getRegTime() {
         return regTime;
     }
 
-    public void setRegTime(Date regTime) {
+    public void setRegTime(LocalDateTime regTime) {
         this.regTime = regTime;
     }
 

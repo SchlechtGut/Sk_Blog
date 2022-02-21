@@ -1,36 +1,50 @@
 package com.example.sk_blog.service;
 
-import com.example.sk_blog.api.response.PostResponse;
-import com.example.sk_blog.api.response.TagResponse;
-import com.example.sk_blog.model.GlobalSetting;
-import com.example.sk_blog.api.response.InitResponse;
-import com.example.sk_blog.api.response.SettingsResponse;
-import com.example.sk_blog.model.Post;
-import com.example.sk_blog.model.PostVote;
-import com.example.sk_blog.model.Tag;
+import com.example.sk_blog.api.response.*;
+import com.example.sk_blog.dto.CommentDTO;
+import com.example.sk_blog.dto.SinglePostDTO;
+import com.example.sk_blog.dto.UserDTO;
+import com.example.sk_blog.model.*;
 import com.example.sk_blog.model.enums.ModerationStatus;
+import com.example.sk_blog.repositories.CaptchaCodeRepository;
 import com.example.sk_blog.repositories.GlobalSettingsRepository;
 import com.example.sk_blog.repositories.PostRepository;
 import com.example.sk_blog.repositories.TagRepository;
+import com.github.cage.Cage;
+import com.github.cage.GCage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class ApiService {
+public class ApiGeneralService {
     private final GlobalSettingsRepository globalSettingsRepository;
     private final PostRepository postRepository;
     private final InitResponse initResponse;
     private final TagRepository tagRepository;
 
     @Autowired
-    public ApiService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository) {
+    public ApiGeneralService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository, CaptchaCodeRepository captchaCodeRepository) {
         this.globalSettingsRepository = globalSettingsRepository;
         this.postRepository = postRepository;
         this.initResponse = initResponse;
@@ -69,64 +83,9 @@ public class ApiService {
         return new SettingsResponse(Boolean.parseBoolean(list.get(0)), Boolean.parseBoolean(list.get(1)), Boolean.parseBoolean(list.get(2)));
     }
 
-
-
-    public PostResponse getPosts(Integer offset, Integer limit, String mode) {
-        Pageable nextPage;
-
-        switch (mode) {
-            case "popular": nextPage = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "postComments"));
-                break;
-            case "best": nextPage = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "postVotes"));
-                break;
-            case "early": nextPage = PageRequest.of(offset, limit, Sort.by(Sort.Direction.ASC, "time"));
-                break;
-            default: nextPage = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "time"));
-        }
-
-        PostResponse postResponse = new PostResponse(postRepository.getPostByIsActiveEqualsAndModerationStatusEquals(1, ModerationStatus.ACCEPTED, nextPage).getContent());
-
-        List<Post> posts = postResponse.getPosts();
-
-        for (Post post : posts) {
-            post.setCommentCount(post.getPostComments().size());
-
-            String announce;
-
-            if (post.getText().length() > 150) {
-                announce = post.getText().substring(0, 150);
-                announce = announce.concat("...");
-            } else {
-                announce = post.getText();
-            }
-
-            post.setAnnounce(announce);
-
-            int likeCount = 0;
-            int dislikeCount = 0;
-
-            for (PostVote postVote  : post.getPostVotes()) {
-                if (postVote.getValue() == 1) {
-                    likeCount++;
-                } else {
-                    dislikeCount++;
-                }
-            }
-
-            post.setLikeCount(likeCount);
-            post.setDislikeCount(dislikeCount);
-
-
-            System.out.println(post.getTime().toEpochSecond(ZoneOffset.UTC) + " " + post.getTime());
-
-        }
-
-        return new PostResponse(postRepository.getPostByIsActiveEqualsAndModerationStatusEquals(1, ModerationStatus.ACCEPTED, nextPage).getContent()) ;
-    }
-
     public TagResponse getTags(String query) {
 
-        double allActivePostCount = postRepository.getAllByTimeBefore(LocalDateTime.now()).size();
+        double allActivePostCount = postRepository.findAllByTimeBefore(LocalDateTime.now()).size();
         List<Tag> allTags = tagRepository.findAll();
         TagResponse tagResponse;
         Tag mostPopularTag;
@@ -155,4 +114,37 @@ public class ApiService {
 
         return tagResponse;
     }
+
+    public CalendarResponse getCalendarResponse(Integer year) {
+        if (year == null) {
+            year = LocalDate.now().getYear();
+        }
+
+        List<Integer> years = postRepository.findYears();
+
+        List<String> dateAndCount = postRepository.getMapOfDistinctPostDates(year);
+
+        LinkedHashMap<LocalDate, Integer> postsPerDate = new LinkedHashMap<>();
+
+        for (String x : dateAndCount) {
+            String[] array = x.split(",");
+            LocalDate date = LocalDate.parse(array[0]);
+            Integer count = Integer.parseInt(array[1]);
+
+            postsPerDate.put(date, count);
+        }
+
+        postsPerDate = postsPerDate.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        return new CalendarResponse(years, postsPerDate);
+    }
+
+    /////////////////////////private///////////////////////////////////////////////////
+
 }

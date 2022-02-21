@@ -211,4 +211,16 @@ public class Post {
     public void setAnnounce(String announce) {
         this.announce = announce;
     }
+
+
+    @Override
+    public String toString() {
+        return "Post{" +
+                "id=" + id +
+                ", likeCount=" + likeCount +
+                ", dislikeCount=" + dislikeCount +
+                ", commentCount=" + commentCount +
+                ", announce='" + announce + '\'' +
+                '}';
+    }
 }

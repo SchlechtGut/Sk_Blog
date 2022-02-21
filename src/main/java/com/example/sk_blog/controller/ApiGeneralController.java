@@ -1,9 +1,10 @@
 package com.example.sk_blog.controller;
 
+import com.example.sk_blog.api.response.CalendarResponse;
 import com.example.sk_blog.api.response.InitResponse;
 import com.example.sk_blog.api.response.SettingsResponse;
 import com.example.sk_blog.api.response.TagResponse;
-import com.example.sk_blog.service.ApiService;
+import com.example.sk_blog.service.ApiGeneralService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,28 +12,33 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/")
+@RequestMapping("/api")
 public class ApiGeneralController {
 
-    private final ApiService apiService;
+    private final ApiGeneralService apiGeneralService;
 
     @Autowired
-    public ApiGeneralController(ApiService apiService) {
-        this.apiService = apiService;
+    public ApiGeneralController(ApiGeneralService apiGeneralService) {
+        this.apiGeneralService = apiGeneralService;
     }
 
-    @GetMapping("init")
+    @GetMapping("/init")
     public InitResponse init() {
-        return apiService.getInitResponse();
+        return apiGeneralService.getInitResponse();
     }
 
-    @GetMapping("settings")
+    @GetMapping("/settings")
     public SettingsResponse settings() {
-        return apiService.getGlobalSettings();
+        return apiGeneralService.getGlobalSettings();
     }
 
-    @GetMapping("tag")
+    @GetMapping("/tag")
     public TagResponse tags(@RequestParam(required = false) String query) {
-        return apiService.getTags(query);
+        return apiGeneralService.getTags(query);
+    }
+
+    @GetMapping("/calendar")
+    public CalendarResponse calendarData(@RequestParam(required = false) Integer year) {
+        return apiGeneralService.getCalendarResponse(year);
     }
 }

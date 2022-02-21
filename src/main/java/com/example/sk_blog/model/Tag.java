@@ -25,6 +25,7 @@ public class Tag {
     private Set<Post> posts;
 
     @Transient
+    @JsonIgnore
     private Double weight;
 
     public Integer getId() {

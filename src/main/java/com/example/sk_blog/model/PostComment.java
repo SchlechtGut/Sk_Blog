@@ -1,9 +1,14 @@
 package com.example.sk_blog.model;
 
 
+import com.example.sk_blog.service.PostService;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "post_comments")
@@ -14,11 +19,13 @@ public class PostComment {
     private int id;
 
     @Column(name = "parent_id")
+    @JsonIgnore
     private Integer parentId;
 
     @Column
-    @NotNull
-    private Date time;
+    @JsonProperty(value = "timestamp")
+    @JsonSerialize(using = PostService.CustomDateSerializer.class)
+    private LocalDateTime time;
 
     @Column(columnDefinition = "text")
     @NotNull
@@ -30,6 +37,7 @@ public class PostComment {
 
     @ManyToOne
     @JoinColumn(name="post_id", nullable=false)
+    @JsonIgnore
     private Post post;
 
     public int getId() {
@@ -48,11 +56,11 @@ public class PostComment {
         this.parentId = parentId;
     }
 
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 
-    public void setTime(Date time) {
+    public void setTime(LocalDateTime time) {
         this.time = time;
     }
 
