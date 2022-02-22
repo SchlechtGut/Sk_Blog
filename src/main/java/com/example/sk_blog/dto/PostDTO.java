@@ -1,23 +1,20 @@
 package com.example.sk_blog.dto;
 
 import com.example.sk_blog.model.User;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Set;
 
-public class SinglePostDTO {
+public class PostDTO {
 
     private Integer id;
     private long timestamp;
-    private Boolean active;
     private User user;
     private String title;
-    private String text;
+    private String announce;
     private Integer likeCount;
     private Integer dislikeCount;
+    private Integer commentCount;
     private Integer viewCount;
-    private Set<CommentDTO> comments;
-    private Set<String> tags;
 
     public Integer getId() {
         return id;
@@ -33,14 +30,6 @@ public class SinglePostDTO {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
-    }
-
-    public Boolean isActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
     }
 
     public User getUser() {
@@ -59,12 +48,12 @@ public class SinglePostDTO {
         this.title = title;
     }
 
-    public String getText() {
-        return text;
+    public String getAnnounce() {
+        return announce;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setAnnounce(String announce) {
+        this.announce = announce;
     }
 
     public Integer getLikeCount() {
@@ -83,27 +72,19 @@ public class SinglePostDTO {
         this.dislikeCount = dislikeCount;
     }
 
+    public Integer getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount;
+    }
+
     public Integer getViewCount() {
         return viewCount;
     }
 
     public void setViewCount(Integer viewCount) {
         this.viewCount = viewCount;
-    }
-
-    public Set<CommentDTO> getComments() {
-        return comments;
-    }
-
-    public void setComments(Set<CommentDTO> comments) {
-        this.comments = comments;
-    }
-
-    public Set<String> getTags() {
-        return tags;
-    }
-
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
     }
 }

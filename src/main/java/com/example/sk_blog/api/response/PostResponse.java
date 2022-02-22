@@ -1,21 +1,16 @@
 package com.example.sk_blog.api.response;
 
+import com.example.sk_blog.dto.PostDTO;
 import com.example.sk_blog.model.Post;
 
 import java.util.List;
 
 public class PostResponse {
 
-    private int count;
+    private final int count;
+    private final List<PostDTO> posts;
 
-    private List<Post> posts;
-
-    public PostResponse(List<Post> posts) {
-        this.posts = posts;
-        count = posts.size();
-    }
-
-    public PostResponse(int count, List<Post> posts) {
+    public PostResponse(int count, List<PostDTO> posts) {
         this.count = count;
         this.posts = posts;
     }
@@ -24,7 +19,7 @@ public class PostResponse {
         return count;
     }
 
-    public List<Post> getPosts() {
+    public List<PostDTO> getPosts() {
         return posts;
     }
 }

@@ -64,6 +64,7 @@ public class Post {
     @ManyToMany(mappedBy = "posts")
     @JsonIgnore
     private Set<Tag> tags;
+
     ////////////////////////// json additional properties
 
     @Transient

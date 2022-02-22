@@ -7,6 +7,12 @@ public class UserDTO {
     private String name;
     private String photo;
 
+    public UserDTO(int id, String name, String photo) {
+        this.id = id;
+        this.name = name;
+        this.photo = photo;
+    }
+
     public int getId() {
         return id;
     }

@@ -1,37 +1,16 @@
 package com.example.sk_blog.service;
 
 import com.example.sk_blog.api.response.*;
-import com.example.sk_blog.dto.CommentDTO;
-import com.example.sk_blog.dto.SinglePostDTO;
-import com.example.sk_blog.dto.UserDTO;
 import com.example.sk_blog.model.*;
-import com.example.sk_blog.model.enums.ModerationStatus;
 import com.example.sk_blog.repositories.CaptchaCodeRepository;
 import com.example.sk_blog.repositories.GlobalSettingsRepository;
 import com.example.sk_blog.repositories.PostRepository;
 import com.example.sk_blog.repositories.TagRepository;
-import com.github.cage.Cage;
-import com.github.cage.GCage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
