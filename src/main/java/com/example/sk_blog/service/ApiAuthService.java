@@ -27,6 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 public class ApiAuthService {
@@ -63,7 +64,7 @@ public class ApiAuthService {
     }
 
     public RegisterResponse register(RegisterRequest request, BindingResult bindingResult) {
-        LinkedHashMap<String, String> errors = new LinkedHashMap<>();
+        Map<String, String> errors = new LinkedHashMap<>();
 
         if (bindingResult.hasErrors()) {
             for (ObjectError error : bindingResult.getAllErrors()) {

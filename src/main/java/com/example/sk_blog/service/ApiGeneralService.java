@@ -103,7 +103,7 @@ public class ApiGeneralService {
 
         List<String> dateAndCount = postRepository.getMapOfDistinctPostDates(year);
 
-        LinkedHashMap<LocalDate, Integer> postsPerDate = new LinkedHashMap<>();
+        Map<LocalDate, Integer> postsPerDate = new LinkedHashMap<>();
 
         for (String x : dateAndCount) {
             String[] array = x.split(",");

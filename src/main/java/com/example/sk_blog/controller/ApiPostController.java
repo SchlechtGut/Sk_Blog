@@ -1,13 +1,14 @@
 package com.example.sk_blog.controller;
 
 import com.example.sk_blog.api.response.PostResponse;
+import com.example.sk_blog.config.PostDTOMapper;
+import com.example.sk_blog.config.SinglePostDTOMapper;
+import com.example.sk_blog.dto.ListSizeDTO;
 import com.example.sk_blog.dto.PostDTO;
 import com.example.sk_blog.dto.SinglePostDTO;
 import com.example.sk_blog.model.*;
 import com.example.sk_blog.service.ApiPostService;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,45 +20,45 @@ import java.util.stream.Collectors;
 public class ApiPostController {
 
     private final ApiPostService apiPostService;
-    private final ModelMapper singlePostDTOModelMapper;
-    private final ModelMapper postDTOModelMapper;
+    private final SinglePostDTOMapper singleMapper;
+    private final PostDTOMapper postDTOMapper;
 
     @Autowired
-    public ApiPostController(ApiPostService apiPostService, ModelMapper singlePostDTOModelMapper, ModelMapper postDTOModelMapper) {
+    public ApiPostController(ApiPostService apiPostService, SinglePostDTOMapper singleMapper, PostDTOMapper postDTOMapper) {
         this.apiPostService = apiPostService;
-        this.singlePostDTOModelMapper = singlePostDTOModelMapper;
-        this.postDTOModelMapper = postDTOModelMapper;
+        this.singleMapper = singleMapper;
+        this.postDTOMapper = postDTOMapper;
     }
 
     @GetMapping
     public PostResponse posts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam(required = false, defaultValue = "recent") String mode) {
-        Pair<Integer, List<Post>> pair = apiPostService.getPosts(offset, limit, mode);
-        return new PostResponse(pair.getFirst(), convertPostsToPostDTOs(pair.getSecond()));
+        ListSizeDTO listSizeDTO = apiPostService.getPosts(offset, limit, mode);
+        return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
     }
 
     @GetMapping("/search")
     public PostResponse searchedPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String query) {
-        Pair<Integer, List<Post>> pair = apiPostService.getSearchedPosts(offset, limit, query);
-        return new PostResponse(pair.getFirst(), convertPostsToPostDTOs(pair.getSecond()));
+        ListSizeDTO listSizeDTO = apiPostService.getSearchedPosts(offset, limit, query);
+        return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
     }
 
     @GetMapping("/byDate")
     public PostResponse postsByDate(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam(required = false) String date) {
-        Pair<Integer, List<Post>> pair = apiPostService.getPostsByDate(offset, limit, date);
-        return new PostResponse(pair.getFirst(), convertPostsToPostDTOs(pair.getSecond()));
+        ListSizeDTO listSizeDTO = apiPostService.getPostsByDate(offset, limit, date);
+        return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
     }
 
     @GetMapping("/byTag")
     public PostResponse postsByTag(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String tag) {
-        Pair<Integer, List<Post>> pair = apiPostService.getPostsByTag(offset, limit, tag);
-        return new PostResponse(pair.getFirst(), convertPostsToPostDTOs(pair.getSecond()));
+        ListSizeDTO listSizeDTO = apiPostService.getPostsByTag(offset, limit, tag);
+        return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SinglePostDTO> postById(@PathVariable Integer id) {
         Post post = apiPostService.getPostById(id);
         if (post != null) {
-            return ResponseEntity.ok(convertToSinglePostDTO(post));
+            return ResponseEntity.ok(singleMapper.toSinglePostDTO(post));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -66,10 +67,6 @@ public class ApiPostController {
 /////////////////////////////private/////////////////////////////////////////////////////////////////////////////
 
     private List<PostDTO> convertPostsToPostDTOs(List<Post> posts) {
-        return posts.stream().map(post -> postDTOModelMapper.map(post, PostDTO.class)).collect(Collectors.toList());
-    }
-
-    private SinglePostDTO convertToSinglePostDTO(Post post) {
-        return singlePostDTOModelMapper.map(post, SinglePostDTO.class);
+        return posts.stream().map((postDTOMapper::toPostDTO)).collect(Collectors.toList());
     }
 }
