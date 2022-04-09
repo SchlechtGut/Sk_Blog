@@ -10,6 +10,8 @@ import com.example.sk_blog.model.*;
 import com.example.sk_blog.service.ApiPostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,13 +33,30 @@ public class ApiPostController {
     }
 
     @GetMapping
-    public PostResponse posts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam(required = false, defaultValue = "recent") String mode) {
+    @PreAuthorize("hasAuthority('user:write')")
+    public PostResponse posts(@RequestParam(defaultValue = "0") Integer offset,
+                              @RequestParam(defaultValue = "20") Integer limit,
+                              @RequestParam(required = false, defaultValue = "recent") String mode) {
         ListSizeDTO listSizeDTO = apiPostService.getPosts(offset, limit, mode);
         return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
     }
 
+    @GetMapping("/my")
+    @PreAuthorize("hasAuthority('user:write')")
+    public PostResponse myPosts(@RequestParam(defaultValue = "0") Integer offset,
+                                @RequestParam(defaultValue = "20") Integer limit,
+                                @RequestParam String status) {
+        System.out.println(SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
+
+
+        ListSizeDTO listSizeDTO = apiPostService.getPostsByStatus(offset, limit, status);
+
+        return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
+    }
+
     @GetMapping("/search")
-    public PostResponse searchedPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String query) {
+    @PreAuthorize("hasAuthority('user:moderate')")
+    public PostResponse searchedPosts(@RequestParam(defaultValue = "0") Integer offset, @RequestParam(defaultValue = "20") Integer limit, @RequestParam String query) {
         ListSizeDTO listSizeDTO = apiPostService.getSearchedPosts(offset, limit, query);
         return new PostResponse(listSizeDTO.getSize(), convertPostsToPostDTOs(listSizeDTO.getList()));
     }

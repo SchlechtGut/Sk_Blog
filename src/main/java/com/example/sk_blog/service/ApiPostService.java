@@ -2,13 +2,17 @@ package com.example.sk_blog.service;
 
 import com.example.sk_blog.dto.ListSizeDTO;
 import com.example.sk_blog.model.Post;
+import com.example.sk_blog.model.User;
 import com.example.sk_blog.model.enums.ModerationStatus;
 import com.example.sk_blog.repositories.PostRepository;
+import com.example.sk_blog.repositories.UserRepository;
+import com.example.sk_blog.security.SecurityUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,10 +24,12 @@ import java.util.Optional;
 public class ApiPostService {
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ApiPostService(PostRepository postRepository) {
+    public ApiPostService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
     public ListSizeDTO getPosts(Integer offset, Integer limit, String mode) {
@@ -86,6 +92,30 @@ public class ApiPostService {
         return new ListSizeDTO((int) page.getTotalElements(), posts);
     }
 
+    public ListSizeDTO getPostsByStatus(Integer offset, Integer limit, String status) {
+        Page<Post> page = null;
+        Pageable nextPage = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "time"));
+
+        org.springframework.security.core.userdetails.User securityUser =
+                (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        User user = userRepository.findByEmail(securityUser.getUsername()).get();
+
+        switch (status) {
+            case "inactive": page = postRepository.findByUserAndIsActive(user, 0, nextPage);
+                break;
+            case "pending": page = postRepository.findByUserAndIsActiveAndModerationStatus(user, 1, ModerationStatus.NEW, nextPage);
+                break;
+            case "declined": page = postRepository.findByUserAndIsActiveAndModerationStatus(user, 1, ModerationStatus.DECLINED, nextPage);
+                break;
+            case "published": page = postRepository.findByUserAndIsActiveAndModerationStatus(user, 1, ModerationStatus.ACCEPTED, nextPage);
+        }
+
+        List<Post> posts = page.getContent();
+
+        return new ListSizeDTO((int) page.getTotalElements(), posts);
+    }
+
     public Post getPostById(Integer id) {
         Optional<Post> optional = postRepository.findById(id);
         Post post = null;
@@ -95,6 +125,8 @@ public class ApiPostService {
         }
         return post;
     }
+
+
 
 
     /////////////////////////private///////////////////////////////////////////////////

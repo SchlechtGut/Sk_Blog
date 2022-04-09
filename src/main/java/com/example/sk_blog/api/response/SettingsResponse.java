@@ -1,7 +1,9 @@
 package com.example.sk_blog.api.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
+@Data
 public class SettingsResponse {
 
     private final boolean multiuserMode;
@@ -9,12 +11,6 @@ public class SettingsResponse {
     private final boolean postPremoderation;
 
     private final boolean statisticsIsPublic;
-
-    public SettingsResponse(boolean multiuser_mode, boolean post_premoderation, boolean statistics_is_public) {
-        multiuserMode = multiuser_mode;
-        postPremoderation = post_premoderation;
-        statisticsIsPublic = statistics_is_public;
-    }
 
     @JsonProperty("MULTIUSER_MODE")
     public boolean getMultiuserMode() {

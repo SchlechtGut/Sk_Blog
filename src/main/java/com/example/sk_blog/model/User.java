@@ -61,7 +61,14 @@ public class User {
     }
 
     public User() {
+    }
 
+    public boolean isModerator() {
+        return isModerator == 1;
+    }
+
+    public Role getRole() {
+        return isModerator == 1 ? Role.MODERATOR : Role.USER;
     }
 
     public Integer getId() {

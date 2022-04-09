@@ -2,6 +2,7 @@ package com.example.sk_blog.repositories;
 
 import com.example.sk_blog.model.Post;
 import com.example.sk_blog.model.Tag;
+import com.example.sk_blog.model.User;
 import com.example.sk_blog.model.enums.ModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +37,10 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "LEFT JOIN tags t ON t.id = tp.tag_id " +
             "WHERE t.name = ?1  and time <= ?2 and moderation_status='ACCEPTED' and is_active=1", nativeQuery = true)
     Page<Post> findByTagsAndModerationStatusAndIsActiveAndTimeBefore(String tag , LocalDateTime presentTime, Pageable pageable);
+
+    int countByModerationStatus(@NotNull ModerationStatus moderationStatus);
+
+    Page<Post> findByUserAndIsActive(User user, Integer isActive, Pageable pageable);
+
+    Page<Post> findByUserAndIsActiveAndModerationStatus(User user, Integer isActive, @NotNull ModerationStatus moderationStatus, Pageable pageable);
 }

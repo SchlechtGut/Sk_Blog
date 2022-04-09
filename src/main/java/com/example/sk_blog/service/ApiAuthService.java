@@ -1,16 +1,22 @@
 package com.example.sk_blog.service;
 
+import com.example.sk_blog.api.request.LoginRequest;
 import com.example.sk_blog.api.request.RegisterRequest;
-import com.example.sk_blog.api.response.CaptchaResponse;
-import com.example.sk_blog.api.response.InitResponse;
-import com.example.sk_blog.api.response.RegisterResponse;
+import com.example.sk_blog.api.response.*;
 import com.example.sk_blog.model.CaptchaCode;
 import com.example.sk_blog.model.User;
+import com.example.sk_blog.model.enums.ModerationStatus;
 import com.example.sk_blog.repositories.*;
 import com.github.cage.Cage;
 import com.github.cage.GCage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -24,6 +30,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -34,14 +41,18 @@ public class ApiAuthService {
 
     private final CaptchaCodeRepository captchaCodeRepository;
     private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final PostRepository postRepository;
 
     @Value("${api.captcha.expiration:3600}")
     private Integer captchaExpiration;
 
     @Autowired
-    public ApiAuthService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository, CaptchaCodeRepository captchaCodeRepository, UserRepository userRepository) {
+    public ApiAuthService(CaptchaCodeRepository captchaCodeRepository, UserRepository userRepository, AuthenticationManager authenticationManager, PostRepository postRepository) {
         this.captchaCodeRepository = captchaCodeRepository;
         this.userRepository = userRepository;
+        this.authenticationManager = authenticationManager;
+        this.postRepository = postRepository;
     }
 
     public CaptchaResponse getCaptcha() {
@@ -98,6 +109,29 @@ public class ApiAuthService {
     }
 
 
+    public LoginResponse login(LoginRequest loginRequest) {
+        try {
+            Authentication auth = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            org.springframework.security.core.userdetails.User securityUser = (org.springframework.security.core.userdetails.User) auth.getPrincipal();
+
+            return getLoginResponse(securityUser.getUsername());
+        } catch (AuthenticationException e) {
+            return new LoginResponse();      // or BindingResult?
+        }
+    }
+
+    public LoginResponse authCheck(Principal principal) {
+        if (principal == null) {
+            return new LoginResponse();
+        }
+
+        return getLoginResponse(principal.getName());
+    }
+
+
 
     /////////////////////////private///////////////////////////////////////////////////
 
@@ -141,4 +175,28 @@ public class ApiAuthService {
     private void deleteExpiredCaptcha() {
         captchaCodeRepository.deleteAllByTimeBefore(LocalDateTime.now().minusSeconds(captchaExpiration));
     }
+
+    private LoginResponse getLoginResponse(String email) {
+        com.example.sk_blog.model.User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(email));
+
+        UserLoginResponse userResponse = new UserLoginResponse();
+        userResponse.setEmail(user.getEmail());
+        userResponse.setId(user.getId());
+        userResponse.setName(user.getName());
+        userResponse.setPhoto(user.getPhoto());
+
+        if (user.isModerator()) {
+            userResponse.setModeration(true);
+            userResponse.setSettings(true);
+            userResponse.setModerationCount(postRepository.countByModerationStatus(ModerationStatus.NEW));
+        }
+
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setResult(true);
+        loginResponse.setUserLoginResponse(userResponse);
+
+        return loginResponse;
+    }
+
+
 }
