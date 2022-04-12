@@ -46,9 +46,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                     ClearSiteDataHeaderWriter.Directive.CACHE,
                                     ClearSiteDataHeaderWriter.Directive.COOKIES,
                                     ClearSiteDataHeaderWriter.Directive.STORAGE)))
-                    .logoutSuccessUrl("/")
-                .and()
-                .httpBasic();
+                    .logoutSuccessUrl("/");
+//                .and()
+//                .httpBasic();
     }
 
 

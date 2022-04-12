@@ -1,5 +1,4 @@
-{
-  "properties": [
+{"properties": [
     {
       "name": "spring.jpa.hibernate.validator",
       "type": "java.lang.String",
