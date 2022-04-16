@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,11 +34,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/**").permitAll()
-//                .antMatchers("/api/post").hasAuthority(Permission.USER.getPermission())
-//                .antMatchers("/api/post/search*").hasAuthority(Permission.MODERATE.getPermission())
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().disable()
+                .formLogin().and()
                 .logout()
                     .logoutUrl("/api/auth/logout")
                     .deleteCookies("JSESSIONID")
@@ -50,8 +49,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .and()
 //                .httpBasic();
     }
-
-
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {

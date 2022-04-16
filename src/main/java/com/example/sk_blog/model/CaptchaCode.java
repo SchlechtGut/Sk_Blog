@@ -1,11 +1,14 @@
 package com.example.sk_blog.model;
 
+import lombok.Data;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "captcha_codes")
+@Data
 public class CaptchaCode {
 
     @Id
@@ -29,37 +32,5 @@ public class CaptchaCode {
     }
 
     public CaptchaCode() {
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getTime() {
-        return time;
-    }
-
-    public void setTime(LocalDateTime time) {
-        this.time = time;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getSecretCode() {
-        return secretCode;
-    }
-
-    public void setSecretCode(String secretCode) {
-        this.secretCode = secretCode;
     }
 }

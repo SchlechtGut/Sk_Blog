@@ -66,15 +66,4 @@ public class Post {
     @ManyToMany(mappedBy = "posts")
     @JsonIgnore
     private Set<Tag> tags;
-
-    ////////////////////////// json additional properties
-
-    @Transient
-    private int likeCount;
-    @Transient
-    private int dislikeCount;
-    @Transient
-    private int commentCount;
-    @Transient
-    private String announce;
 }
