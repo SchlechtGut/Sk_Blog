@@ -37,7 +37,6 @@ public class ApiAuthController {
 
     @GetMapping("/check")
     public LoginResponse authCheck(Principal principal) {
-        System.out.println(principal);
         return apiAuthService.authCheck(principal);
     }
 

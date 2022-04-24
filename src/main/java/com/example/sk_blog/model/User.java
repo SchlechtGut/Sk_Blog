@@ -3,6 +3,8 @@ package com.example.sk_blog.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -12,7 +14,8 @@ import java.util.Set;
 @JsonIncludeProperties({ "id", "name" })
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -31,21 +31,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.
-                csrf().disable()
-                .authorizeRequests()
+            csrf().disable()
+            .authorizeRequests()
                 .antMatchers("/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().and()
-                .logout()
-                    .logoutUrl("/api/auth/logout")
-                    .deleteCookies("JSESSIONID")
-                    .addLogoutHandler(new HeaderWriterLogoutHandler(
-                            new ClearSiteDataHeaderWriter(
-                                    ClearSiteDataHeaderWriter.Directive.CACHE,
-                                    ClearSiteDataHeaderWriter.Directive.COOKIES,
-                                    ClearSiteDataHeaderWriter.Directive.STORAGE)))
-                    .logoutSuccessUrl("/");
+            .formLogin()
+                .loginPage("/login")
+                .and()
+            .logout()
+                .logoutUrl("/api/auth/logout")
+                .deleteCookies("JSESSIONID")
+                .addLogoutHandler(new HeaderWriterLogoutHandler(
+                        new ClearSiteDataHeaderWriter(
+                                ClearSiteDataHeaderWriter.Directive.CACHE,
+                                ClearSiteDataHeaderWriter.Directive.COOKIES,
+                                ClearSiteDataHeaderWriter.Directive.STORAGE)))
+                .logoutSuccessUrl("/");
 //                .and()
 //                .httpBasic();
     }
