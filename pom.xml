@@ -77,7 +77,6 @@
             <artifactId>liquibase-core</artifactId>
             <version>4.9.1</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -107,7 +106,8 @@
                 <artifactId>liquibase-maven-plugin</artifactId>
                 <version>4.7.0</version>
                 <configuration>
-                    <propertyFile>${project.build.outputDirectory}/liquibase.properties</propertyFile>
+                    <propertyFile>src/main/resources/liquibase.properties</propertyFile>
+                    <changeLogFile>/src/main/resources/db/changelog/changeset/liquibase-initial-schema.xml</changeLogFile>
                 </configuration>
                 <dependencies>
                     <dependency>
