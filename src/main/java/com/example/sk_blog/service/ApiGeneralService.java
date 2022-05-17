@@ -67,6 +67,12 @@ public class ApiGeneralService {
         double allActivePostCount = postRepository.findAllByTimeBefore(LocalDateTime.now()).size();
         List<Tag> allTags = tagRepository.findAll();
         TagResponse tagResponse;
+
+        if (allTags.isEmpty()) {
+            tagResponse = new TagResponse(allTags);
+            return tagResponse;
+        }
+
         Tag mostPopularTag;
         double k;
 

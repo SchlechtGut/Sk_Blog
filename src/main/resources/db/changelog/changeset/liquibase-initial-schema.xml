@@ -189,5 +189,4 @@
     <changeSet author="SchlechtGut (generated)" id="1652262262068-21">
         <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="post_comments" constraintName="FKsnxoecngu89u3fh4wdrgf0f2g" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id" referencedTableName="users" />
     </changeSet>
-
 </databaseChangeLog>

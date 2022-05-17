@@ -33,7 +33,6 @@ public class ApiPostController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('user:write')")
     public PostResponse posts(@RequestParam(defaultValue = "0") Integer offset,
                               @RequestParam(defaultValue = "20") Integer limit,
                               @RequestParam(required = false, defaultValue = "recent") String mode) {
