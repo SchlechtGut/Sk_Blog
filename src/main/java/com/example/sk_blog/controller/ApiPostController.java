@@ -1,21 +1,24 @@
 package com.example.sk_blog.controller;
 
+import com.example.sk_blog.api.request.PostIdRequest;
+import com.example.sk_blog.api.request.PostRequest;
+import com.example.sk_blog.api.response.TrueOrErrorsResponse;
 import com.example.sk_blog.api.response.PostResponse;
 import com.example.sk_blog.config.PostDTOMapper;
 import com.example.sk_blog.config.SinglePostDtoMapper;
 import com.example.sk_blog.dto.ListSizeDTO;
-import com.example.sk_blog.dto.PostDTO;
 import com.example.sk_blog.dto.SinglePostDTO;
 import com.example.sk_blog.model.*;
 import com.example.sk_blog.service.ApiPostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/post")
@@ -40,21 +43,39 @@ public class ApiPostController {
         return new PostResponse(listSizeDTO.getSize(), postDTOMapper.postsToDTOs(listSizeDTO.getList()));
     }
 
+    @PostMapping
+    @PreAuthorize("hasAuthority('user:write')")
+    public TrueOrErrorsResponse addPost(@RequestBody @Valid PostRequest request, BindingResult bindingResult, Authentication authentication) {
+        return apiPostService.addPost(request, bindingResult, authentication);
+    }
+
+
+    @PutMapping("/{id}")
+    public TrueOrErrorsResponse editPost(@PathVariable Integer id, @RequestBody @Valid PostRequest request, BindingResult bindingResult, Authentication authentication) {
+        return apiPostService.editPost(id, request, bindingResult, authentication);
+    }
+
     @GetMapping("/my")
     @PreAuthorize("hasAuthority('user:write')")
     public PostResponse myPosts(@RequestParam(defaultValue = "0") Integer offset,
                                 @RequestParam(defaultValue = "20") Integer limit,
                                 @RequestParam String status) {
-        System.out.println(SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
+        ListSizeDTO listSizeDTO = apiPostService.getPostsByPostStatus(offset, limit, status);
 
+        return new PostResponse(listSizeDTO.getSize(), postDTOMapper.postsToDTOs(listSizeDTO.getList()));
+    }
 
-        ListSizeDTO listSizeDTO = apiPostService.getPostsByStatus(offset, limit, status);
+    @GetMapping("/moderation")
+    @PreAuthorize("hasAuthority('user:moderate')")
+    public PostResponse postsForModeration(@RequestParam(defaultValue = "0") Integer offset,
+                                @RequestParam(defaultValue = "20") Integer limit,
+                                @RequestParam String status) {
+        ListSizeDTO listSizeDTO = apiPostService.getPostsByModerationStatus(offset, limit, status);
 
         return new PostResponse(listSizeDTO.getSize(), postDTOMapper.postsToDTOs(listSizeDTO.getList()));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('user:moderate')")
     public PostResponse searchedPosts(@RequestParam(defaultValue = "0") Integer offset, @RequestParam(defaultValue = "20") Integer limit, @RequestParam String query) {
         ListSizeDTO listSizeDTO = apiPostService.getSearchedPosts(offset, limit, query);
         return new PostResponse(listSizeDTO.getSize(), postDTOMapper.postsToDTOs(listSizeDTO.getList()));
@@ -80,6 +101,18 @@ public class ApiPostController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping("/like")
+    @PreAuthorize("hasAuthority('user:write')")
+    public TrueOrErrorsResponse likePost(@RequestBody PostIdRequest postIdRequest) {
+        return apiPostService.votePost(postIdRequest, 1);
+    }
+
+    @PostMapping("/dislike")
+    @PreAuthorize("hasAuthority('user:write')")
+    public TrueOrErrorsResponse dislikePost(@RequestBody PostIdRequest postIdRequest) {
+        return apiPostService.votePost(postIdRequest, -1);
     }
 
 /////////////////////////////private/////////////////////////////////////////////////////////////////////////////

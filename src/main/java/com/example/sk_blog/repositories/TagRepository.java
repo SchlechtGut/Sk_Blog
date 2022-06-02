@@ -10,5 +10,9 @@ public interface TagRepository extends JpaRepository<Tag, Integer> {
 
     List<Tag> getAllByNameStartingWith(@NotNull String name);
 
+    boolean existsByNameIgnoreCase(@NotNull String name);
+
+    Tag findByNameIgnoreCase(@NotNull String name);
+
 
 }

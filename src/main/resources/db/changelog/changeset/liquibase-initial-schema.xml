@@ -80,7 +80,7 @@
             </column>
             <column name="is_active" type="TINYINT(3)"/>
             <column defaultValue="NEW" name="moderation_status" type="VARCHAR(50)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="moderator_id" type="INT"/>
             <column name="text" type="TEXT">

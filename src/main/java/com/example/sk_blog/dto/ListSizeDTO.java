@@ -14,4 +14,12 @@ public class ListSizeDTO {
         this.size = size;
         this.list = list;
     }
+
+    @Override
+    public String toString() {
+        return "ListSizeDTO{" +
+                "size=" + size +
+                ", list=" + list +
+                '}';
+    }
 }

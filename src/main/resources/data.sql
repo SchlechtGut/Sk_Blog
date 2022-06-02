@@ -1,6 +1,6 @@
-insert into global_settings (code, name, value) values ('MULTIUSER_MODE', 'Многопользовательский режим', 'NO');
-insert into global_settings (code, name, value) values ('POST_PREMODERATION', 'Премодерация постов', 'YES');
-insert into global_settings (code, name, value) values ('STATISTICS_IS_PUBLIC', 'Показывать всем статистику блога', 'YES');
+-- insert into global_settings (code, name, value) values ('MULTIUSER_MODE', 'Многопользовательский режим', 'NO');
+-- insert into global_settings (code, name, value) values ('POST_PREMODERATION', 'Премодерация постов', 'YES');
+-- insert into global_settings (code, name, value) values ('STATISTICS_IS_PUBLIC', 'Показывать всем статистику блога', 'YES');
 
 insert into users (id, email, is_moderator, name, password, reg_time) values (1, 'glickess0@soundcloud.com', 1, 'Gena', 'B0gTBu', '2022-01-30 07:14:22');
 insert into users (id, email, is_moderator, name, password, reg_time) values (2, 'hkinny1@columbia.edu', 0, 'Henrik', 'OeNNcQEA9t', '2021-08-19 23:39:17');

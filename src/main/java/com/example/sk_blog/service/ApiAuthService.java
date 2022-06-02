@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -43,16 +44,18 @@ public class ApiAuthService {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final PostRepository postRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${api.captcha.expiration:3600}")
     private Integer captchaExpiration;
 
     @Autowired
-    public ApiAuthService(CaptchaCodeRepository captchaCodeRepository, UserRepository userRepository, AuthenticationManager authenticationManager, PostRepository postRepository) {
+    public ApiAuthService(CaptchaCodeRepository captchaCodeRepository, UserRepository userRepository, AuthenticationManager authenticationManager, PostRepository postRepository, PasswordEncoder passwordEncoder) {
         this.captchaCodeRepository = captchaCodeRepository;
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.postRepository = postRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public CaptchaResponse getCaptcha() {
@@ -74,7 +77,7 @@ public class ApiAuthService {
         return new CaptchaResponse(secretCode, "data:image/png;base64, " + encodedCaptcha);
     }
 
-    public RegisterResponse register(RegisterRequest request, BindingResult bindingResult) {
+    public TrueOrErrorsResponse register(RegisterRequest request, BindingResult bindingResult) {
         Map<String, String> errors = new LinkedHashMap<>();
 
         if (bindingResult.hasErrors()) {
@@ -100,11 +103,11 @@ public class ApiAuthService {
         }
 
         if (errors.isEmpty()) {
-            User user = new User(0, LocalDateTime.now(), request.getName(), request.getEmail(), request.getPassword());
+            User user = new User(0, LocalDateTime.now(), request.getName(), request.getEmail(), passwordEncoder.encode(request.getPassword()));
             userRepository.save(user);
-            return new RegisterResponse(true);
+            return new TrueOrErrorsResponse(true);
         } else {
-            return new RegisterResponse(false, errors);
+            return new TrueOrErrorsResponse(false, errors);
         }
     }
 

@@ -29,4 +29,19 @@ public class Tag {
     @Transient
     @JsonIgnore
     private Double weight;
+
+    public Tag(String name) {
+        this.name = name;
+    }
+
+    public Tag() {
+    }
+
+    @Override
+    public String toString() {
+        return "Tag{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

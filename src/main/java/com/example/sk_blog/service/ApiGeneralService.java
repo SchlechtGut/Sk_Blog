@@ -1,19 +1,25 @@
 package com.example.sk_blog.service;
 
 import com.example.sk_blog.api.response.*;
-import com.example.sk_blog.model.*;
-import com.example.sk_blog.repositories.CaptchaCodeRepository;
-import com.example.sk_blog.repositories.GlobalSettingsRepository;
-import com.example.sk_blog.repositories.PostRepository;
-import com.example.sk_blog.repositories.TagRepository;
+import com.example.sk_blog.model.GlobalSetting;
+import com.example.sk_blog.model.Post;
+import com.example.sk_blog.model.Tag;
+import com.example.sk_blog.model.User;
+import com.example.sk_blog.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ApiGeneralService {
@@ -21,13 +27,15 @@ public class ApiGeneralService {
     private final PostRepository postRepository;
     private final InitResponse initResponse;
     private final TagRepository tagRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ApiGeneralService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository, CaptchaCodeRepository captchaCodeRepository) {
+    public ApiGeneralService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository, CaptchaCodeRepository captchaCodeRepository, PostCommentRepository postCommentRepository, UserRepository userRepository, UserRepository userRepository1) {
         this.globalSettingsRepository = globalSettingsRepository;
         this.postRepository = postRepository;
         this.initResponse = initResponse;
         this.tagRepository = tagRepository;
+        this.userRepository = userRepository1;
     }
 
     public InitResponse getInitResponse() {
@@ -130,6 +138,52 @@ public class ApiGeneralService {
         return new CalendarResponse(years, postsPerDate);
     }
 
+    public StatisticsResponse getUserStatistics() {
+        User user = getCurrentUser();
+        return getStatistics(user.getPosts());
+    }
+
+    public ResponseEntity<?> getGeneralStatistics() {
+        if (!getGlobalSettings().getStatisticsIsPublic() && !isModerator()) {
+            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//            return  ResponseEntity.status(HttpStatus.FOUND).location(URI.create("/")).build(); это работает
+        }
+
+        List<Post> posts = postRepository.findAll();
+        StatisticsResponse statisticsResponse = getStatistics(posts);
+
+        return ResponseEntity.ok(statisticsResponse);
+    }
+
     /////////////////////////private///////////////////////////////////////////////////
+
+    private User getCurrentUser() {
+        org.springframework.security.core.userdetails.User securityUser =
+                (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByEmail(securityUser.getUsername()).get();
+    }
+
+    private boolean isModerator() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            return getCurrentUser().isModerator();
+        } else return false;
+    }
+
+    private StatisticsResponse getStatistics(Collection<Post> posts) {
+        StatisticsResponse statisticsResponse = new StatisticsResponse();
+        statisticsResponse.setPostsCount(posts.size());
+        statisticsResponse.setLikesCount(posts.stream().mapToLong(Post::getLikesCount).sum());
+        statisticsResponse.setDislikesCount(posts.stream().mapToLong(Post::getDislikesCount).sum());
+        statisticsResponse.setViewsCount(posts.stream().mapToLong(Post::getViewCount).sum());
+        statisticsResponse.setFirstPublication(posts.stream().mapToLong(x -> x.getTime().atZone(ZoneId.of("UTC")).toInstant().toEpochMilli()).min().getAsLong());
+
+        return statisticsResponse;
+    }
+
+
+
 
 }
