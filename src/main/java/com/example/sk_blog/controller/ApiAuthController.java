@@ -1,20 +1,18 @@
 package com.example.sk_blog.controller;
 
+import com.example.sk_blog.api.request.EmailRequest;
 import com.example.sk_blog.api.request.LoginRequest;
+import com.example.sk_blog.api.request.PasswordChangeRequest;
 import com.example.sk_blog.api.request.RegisterRequest;
 import com.example.sk_blog.api.response.CaptchaResponse;
 import com.example.sk_blog.api.response.LoginResponse;
 import com.example.sk_blog.api.response.TrueOrErrorsResponse;
 import com.example.sk_blog.service.ApiAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.security.Principal;
 
@@ -45,27 +43,23 @@ public class ApiAuthController {
     }
 
     @PostMapping("/register")
-    public TrueOrErrorsResponse register(@RequestBody @Valid RegisterRequest request, BindingResult bindingResult) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request, BindingResult bindingResult) {
         return apiAuthService.register(request, bindingResult);
     }
 
-    @GetMapping("/logout")
-    @PreAuthorize("hasAuthority('user:write')")
-    public TrueOrErrorsResponse handleLogout(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        SecurityContextHolder.clearContext();
-        if (session != null) {
-            session.invalidate();
-        }
-
-        for (Cookie cookie : request.getCookies()) {
-            cookie.setMaxAge(0);
-        }
-
-        System.out.println("srgsg");
-
-        return new TrueOrErrorsResponse(true);
+    @PostMapping("/restore")
+    public TrueOrErrorsResponse restorePassword(@RequestBody EmailRequest emailRequest) {
+        return apiAuthService.restorePassword(emailRequest);
     }
+
+    @PostMapping("/password")
+    public TrueOrErrorsResponse changePassword(@RequestBody PasswordChangeRequest passwordChangeRequest) {
+        return apiAuthService.changePassword(passwordChangeRequest);
+    }
+
+
+
+
 
 //    @GetMapping("/logout")
 //    public String handleLogout(HttpServletRequest request) {

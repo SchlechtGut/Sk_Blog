@@ -1,19 +1,12 @@
 package com.example.sk_blog.api.response;
 
-public class ErrorMessageResponse {
+import lombok.Data;
 
-    public String message;
+@Data
+public class ErrorMessageResponse {
+    private String message;
 
     public ErrorMessageResponse(String message) {
         this.message = message;
     }
-
-    public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
-
 }

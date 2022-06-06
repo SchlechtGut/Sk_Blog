@@ -13,13 +13,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class ApiGeneralService {
@@ -144,7 +144,7 @@ public class ApiGeneralService {
     }
 
     public ResponseEntity<?> getGeneralStatistics() {
-        if (!getGlobalSettings().getStatisticsIsPublic() && !isModerator()) {
+        if (!getGlobalSettings().isStatisticsIsPublic() && !isModerator()) {
             return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 //            return  ResponseEntity.status(HttpStatus.FOUND).location(URI.create("/")).build(); это работает
         }
@@ -153,6 +153,32 @@ public class ApiGeneralService {
         StatisticsResponse statisticsResponse = getStatistics(posts);
 
         return ResponseEntity.ok(statisticsResponse);
+    }
+
+    public TrueOrErrorsResponse editProfile(String name, String email, String password, Integer removePhoto, MultipartFile photo) {
+
+
+        if (removePhoto == null) {
+            System.out.println("RemovePhoto() == null");
+        }
+
+        if (photo == null) {
+            System.out.println("Photo() == null");
+        }
+
+        if (password == null) {
+            System.out.println("password() == null");
+        }
+
+        if (name == null) {
+            System.out.println("name() == null");
+        }
+
+        if (email == null) {
+            System.out.println("email == null");
+        }
+
+        return new TrueOrErrorsResponse();
     }
 
     /////////////////////////private///////////////////////////////////////////////////
@@ -183,7 +209,16 @@ public class ApiGeneralService {
         return statisticsResponse;
     }
 
+    public void changeGlobalSettings(SettingsResponse settings) {
+        GlobalSetting multiuserMode = globalSettingsRepository.findByCode("MULTIUSER_MODE");
+        multiuserMode.setValue(settings.isMultiuserMode() ? "YES" : "NO");
 
+        GlobalSetting postPremoderation = globalSettingsRepository.findByCode("POST_PREMODERATION");
+        postPremoderation.setValue(settings.isPostPremoderation() ? "YES" : "NO");
 
+        GlobalSetting statisticsIsPublic = globalSettingsRepository.findByCode("STATISTICS_IS_PUBLIC");
+        statisticsIsPublic.setValue(settings.isStatisticsIsPublic() ? "YES" : "NO");
 
+        globalSettingsRepository.saveAll(List.of(multiuserMode, postPremoderation, statisticsIsPublic));
+    }
 }

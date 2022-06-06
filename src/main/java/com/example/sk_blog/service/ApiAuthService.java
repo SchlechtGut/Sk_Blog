@@ -1,16 +1,29 @@
 package com.example.sk_blog.service;
 
+import com.example.sk_blog.api.request.EmailRequest;
 import com.example.sk_blog.api.request.LoginRequest;
+import com.example.sk_blog.api.request.PasswordChangeRequest;
 import com.example.sk_blog.api.request.RegisterRequest;
-import com.example.sk_blog.api.response.*;
+import com.example.sk_blog.api.response.CaptchaResponse;
+import com.example.sk_blog.api.response.LoginResponse;
+import com.example.sk_blog.api.response.TrueOrErrorsResponse;
+import com.example.sk_blog.api.response.UserLoginResponse;
 import com.example.sk_blog.model.CaptchaCode;
 import com.example.sk_blog.model.User;
 import com.example.sk_blog.model.enums.ModerationStatus;
-import com.example.sk_blog.repositories.*;
+import com.example.sk_blog.repositories.CaptchaCodeRepository;
+import com.example.sk_blog.repositories.GlobalSettingsRepository;
+import com.example.sk_blog.repositories.PostRepository;
+import com.example.sk_blog.repositories.UserRepository;
 import com.github.cage.Cage;
 import com.github.cage.GCage;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -36,6 +49,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ApiAuthService {
@@ -45,17 +59,23 @@ public class ApiAuthService {
     private final AuthenticationManager authenticationManager;
     private final PostRepository postRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender javaMailSender;
+    private final JWTUtil jwtUtil;
+    private final GlobalSettingsRepository globalSettingsRepository;
 
-    @Value("${api.captcha.expiration:3600}")
+    @Value("${api.captcha.expiration}")
     private Integer captchaExpiration;
 
     @Autowired
-    public ApiAuthService(CaptchaCodeRepository captchaCodeRepository, UserRepository userRepository, AuthenticationManager authenticationManager, PostRepository postRepository, PasswordEncoder passwordEncoder) {
+    public ApiAuthService(CaptchaCodeRepository captchaCodeRepository, UserRepository userRepository, AuthenticationManager authenticationManager, PostRepository postRepository, PasswordEncoder passwordEncoder, JavaMailSender javaMailSender, JWTUtil jwtUtil, GlobalSettingsRepository globalSettingsRepository) {
         this.captchaCodeRepository = captchaCodeRepository;
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.postRepository = postRepository;
         this.passwordEncoder = passwordEncoder;
+        this.javaMailSender = javaMailSender;
+        this.jwtUtil = jwtUtil;
+        this.globalSettingsRepository = globalSettingsRepository;
     }
 
     public CaptchaResponse getCaptcha() {
@@ -77,12 +97,15 @@ public class ApiAuthService {
         return new CaptchaResponse(secretCode, "data:image/png;base64, " + encodedCaptcha);
     }
 
-    public TrueOrErrorsResponse register(RegisterRequest request, BindingResult bindingResult) {
+    public ResponseEntity<?> register(RegisterRequest request, BindingResult bindingResult) {
+        if (globalSettingsRepository.findByCode("MULTIUSER_MODE").getValue().equals("NO")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
         Map<String, String> errors = new LinkedHashMap<>();
 
         if (bindingResult.hasErrors()) {
             for (ObjectError error : bindingResult.getAllErrors()) {
-
                 String fieldName = ((FieldError) error).getField();
 
                 String errorMessage = error.getDefaultMessage();
@@ -105,9 +128,9 @@ public class ApiAuthService {
         if (errors.isEmpty()) {
             User user = new User(0, LocalDateTime.now(), request.getName(), request.getEmail(), passwordEncoder.encode(request.getPassword()));
             userRepository.save(user);
-            return new TrueOrErrorsResponse(true);
+            return ResponseEntity.ok(new TrueOrErrorsResponse(true));
         } else {
-            return new TrueOrErrorsResponse(false, errors);
+            return ResponseEntity.ok(new TrueOrErrorsResponse(errors));
         }
     }
 
@@ -133,6 +156,64 @@ public class ApiAuthService {
 
         return getLoginResponse(principal.getName());
     }
+
+    public TrueOrErrorsResponse restorePassword(EmailRequest emailRequest) {
+        Optional<User> optional = userRepository.findByEmail(emailRequest.getEmail());
+
+        if (optional.isPresent()) {
+            User user = optional.get();
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("schlechtgut@mail.ru");
+            message.setTo(emailRequest.getEmail());
+            message.setSubject("Password changing");
+
+            String code = jwtUtil.generateToken(emailRequest.getEmail());
+
+            message.setText("http://localhost:8080/login/change-password/" + code);
+            user.setCode(code);
+            userRepository.save(user);
+
+            javaMailSender.send(message);
+
+            return new TrueOrErrorsResponse(true);
+        }
+
+        return new TrueOrErrorsResponse();
+    }
+
+
+    public TrueOrErrorsResponse changePassword(PasswordChangeRequest passwordChangeRequest) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        String code = passwordChangeRequest.getCode();
+        String captcha = passwordChangeRequest.getCaptcha();
+        String captchaSecret = passwordChangeRequest.getCaptchaSecret();
+        String password = passwordChangeRequest.getPassword();
+
+        CaptchaCode captchaCode = captchaCodeRepository.findBySecretCode(captchaSecret);
+
+        User user = userRepository.findByCode(code);
+
+        if (user == null) {
+            errors.put("code", "code is incorrect");
+        } else if (jwtUtil.isTokenExpired(passwordChangeRequest.getCode())) {
+            errors.put("code", "Ссылка для восстановления пароля устарела. <a href=\"/login/restore-password\">Запросить ссылку снова</a>");
+        } else if (captcha == null) {
+            errors.put("captcha_secret", "такой капчи нет");
+        } else if (!captchaCode.getCode().equals(captcha)) {
+            errors.put("captcha", "Код с картинки введён неверно");
+        }
+
+        if (errors.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+            userRepository.save(user);
+            return new TrueOrErrorsResponse(true);
+        }
+
+        return new TrueOrErrorsResponse(errors);
+    }
+
+
 
 
 
@@ -201,5 +282,8 @@ public class ApiAuthService {
         return loginResponse;
     }
 
+    private String generateCode() {
+        return RandomStringUtils.randomAlphanumeric(45);
+    }
 
 }
