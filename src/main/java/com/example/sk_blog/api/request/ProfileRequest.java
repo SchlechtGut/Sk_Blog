@@ -1,15 +1,15 @@
 package com.example.sk_blog.api.request;
 
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.Email;
+import javax.validation.constraints.Size;
 
 @Data
 public class ProfileRequest {
+    @Size(min = 2, message = "имя менее 2 символов")
     private String name;
     private String password;
-    private MultipartFile photo;
     @Email
     private String email;
     private Integer removePhoto;

@@ -8,11 +8,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -23,7 +29,7 @@ public class ResourceStorage {
     @Value("${upload.path}")
     String uploadPath;
 
-    public ResponseEntity<?> saveNewBookImage(MultipartFile file) throws IOException {
+    public ResponseEntity<?> saveNewBookImage(MultipartFile file, boolean avatar) throws IOException {
         Map<String, String> errors = new LinkedHashMap<>();
 
 //        if (file.getSize() > 1024 * 1024) {
@@ -52,7 +58,18 @@ public class ResourceStorage {
             String fileName = RandomStringUtils.randomAlphanumeric(5) + "." + extension;
             Path path = Paths.get(uploadPath, fileName);
 
-            file.transferTo(path);
+            System.out.println("path before save - " + path);
+
+            if (avatar) {
+                BufferedImage originalImage = ImageIO.read(file.getInputStream());
+                originalImage = resizeImage(originalImage, 36, 36);
+                System.out.println(Arrays.toString(originalImage.getPropertyNames()));
+                ImageIO.write(originalImage, extension, new File(String.valueOf(path)));
+
+            } else {
+                file.transferTo(path);
+            }
+
             Logger.getLogger(this.getClass().getSimpleName()).info( "file was uploaded in " + path);
 
             return ResponseEntity.ok(path.toString());
@@ -60,4 +77,14 @@ public class ResourceStorage {
 
         return ResponseEntity.badRequest().body(new TrueOrErrorsResponse(errors));
     }
+
+    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws IOException {
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics2D = resizedImage.createGraphics();
+        graphics2D.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+        graphics2D.dispose();
+        return resizedImage;
+    }
+
+
 }

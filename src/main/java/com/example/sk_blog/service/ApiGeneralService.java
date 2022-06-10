@@ -1,5 +1,6 @@
 package com.example.sk_blog.service;
 
+import com.example.sk_blog.api.request.ProfileRequest;
 import com.example.sk_blog.api.response.*;
 import com.example.sk_blog.model.GlobalSetting;
 import com.example.sk_blog.model.Post;
@@ -12,8 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,14 +32,18 @@ public class ApiGeneralService {
     private final InitResponse initResponse;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final ResourceStorage resourceStorage;
 
     @Autowired
-    public ApiGeneralService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository, CaptchaCodeRepository captchaCodeRepository, PostCommentRepository postCommentRepository, UserRepository userRepository, UserRepository userRepository1) {
+    public ApiGeneralService(GlobalSettingsRepository globalSettingsRepository, PostRepository postRepository, InitResponse initResponse, TagRepository tagRepository, CaptchaCodeRepository captchaCodeRepository, PostCommentRepository postCommentRepository, UserRepository userRepository, UserRepository userRepository1, PasswordEncoder passwordEncoder, ResourceStorage resourceStorage) {
         this.globalSettingsRepository = globalSettingsRepository;
         this.postRepository = postRepository;
         this.initResponse = initResponse;
         this.tagRepository = tagRepository;
         this.userRepository = userRepository1;
+        this.passwordEncoder = passwordEncoder;
+        this.resourceStorage = resourceStorage;
     }
 
     public InitResponse getInitResponse() {
@@ -155,30 +163,62 @@ public class ApiGeneralService {
         return ResponseEntity.ok(statisticsResponse);
     }
 
-    public TrueOrErrorsResponse editProfile(String name, String email, String password, Integer removePhoto, MultipartFile photo) {
+    public TrueOrErrorsResponse editProfileWithoutPhoto(ProfileRequest profileRequest, BindingResult bindingResult) {
+        Map<String, String> errors = new LinkedHashMap<>();
 
-
-        if (removePhoto == null) {
-            System.out.println("RemovePhoto() == null");
+        if (bindingResult.hasErrors()) {
+            for (ObjectError error : bindingResult.getAllErrors()) {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            }
         }
 
-        if (photo == null) {
-            System.out.println("Photo() == null");
+        if (!errors.isEmpty()) {
+            return new TrueOrErrorsResponse(errors);
+        }
+
+        User user = getCurrentUser();
+
+        if (profileRequest.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(profileRequest.getPassword()));
+        }
+
+        if (profileRequest.getRemovePhoto().equals(1)) {
+            user.setPhoto(null);
+        }
+
+        userRepository.save(user);
+
+        return new TrueOrErrorsResponse(true);
+    }
+    public TrueOrErrorsResponse editProfileWithPhoto(String name, String email, String password, String imagePath) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        User user = getCurrentUser();
+
+        if (name.length() < 2 ) {
+            errors.put("name", "имя менее 2 символов");
+        }
+
+        if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+            errors.put("email", "неверный формат email");
         }
 
         if (password == null) {
-            System.out.println("password() == null");
+            errors.put("password", "пароль менее 6 символов");
         }
 
-        if (name == null) {
-            System.out.println("name() == null");
+        if (errors.isEmpty()) {
+            user.setName(name);
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(password));
+            user.setPhoto(imagePath);
+
+            userRepository.save(user);
+            return new TrueOrErrorsResponse(true);
         }
 
-        if (email == null) {
-            System.out.println("email == null");
-        }
-
-        return new TrueOrErrorsResponse();
+        return new TrueOrErrorsResponse(errors);
     }
 
     /////////////////////////private///////////////////////////////////////////////////

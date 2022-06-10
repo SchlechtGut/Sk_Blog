@@ -2,11 +2,13 @@ package com.example.sk_blog.controller;
 
 import com.example.sk_blog.api.request.ModerationRequest;
 import com.example.sk_blog.api.request.PostCommentRequest;
+import com.example.sk_blog.api.request.ProfileRequest;
 import com.example.sk_blog.api.response.*;
 import com.example.sk_blog.service.ApiGeneralService;
 import com.example.sk_blog.service.ApiPostService;
 import com.example.sk_blog.service.ResourceStorage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -60,7 +63,7 @@ public class ApiGeneralController {
     @PostMapping("/image")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> uploadImage(@RequestParam MultipartFile image) throws IOException {
-        return resourceStorage.saveNewBookImage(image);
+        return resourceStorage.saveNewBookImage(image, false);
     }
 
     @PostMapping("/comment")
@@ -86,19 +89,31 @@ public class ApiGeneralController {
         return apiGeneralService.getGeneralStatistics();
     }
 
-    @PostMapping(path = "/profile/my") //, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}
-    public TrueOrErrorsResponse editProfile(@RequestParam(required = false) String name,
-                                            @RequestParam(required = false) String email,
+    @PostMapping(path = "/profile/my", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PreAuthorize("isAuthenticated()")
+    public TrueOrErrorsResponse editProfileWithPhoto(@RequestParam String name,
+                                            @RequestParam String email,
                                             @RequestParam(required = false) String password,
-                                            @RequestParam(required = false) Integer removePhoto,
-                                            @RequestParam(required = false) MultipartFile photo) {
-        System.out.println(name);
-        System.out.println(email);
-        System.out.println(password);
-        System.out.println(removePhoto);
-        System.out.println(photo);
+                                            @RequestParam(required = false) MultipartFile photo) throws IOException {
 
-        return new TrueOrErrorsResponse();
+        ResponseEntity<?> entity = resourceStorage.saveNewBookImage(photo, true);
+
+        if (entity.getBody() instanceof TrueOrErrorsResponse) {
+            System.out.println("instanceof TrueOrErrorsResponse");
+            return (TrueOrErrorsResponse) entity.getBody();
+        } else {
+            System.out.println("saved to path");
+            String imagePath = (String) entity.getBody();
+            return apiGeneralService.editProfileWithPhoto(name, email, password, imagePath);
+        }
+    }
+
+    @PostMapping(path = "/profile/my" , consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("isAuthenticated()")
+    public TrueOrErrorsResponse editProfile(@RequestBody @Valid ProfileRequest profileRequest, BindingResult bindingResult) {
+        System.out.println(profileRequest);
+
+        return apiGeneralService.editProfileWithoutPhoto(profileRequest, bindingResult);
     }
 
 //    @PostMapping(path = "/profile/my")
