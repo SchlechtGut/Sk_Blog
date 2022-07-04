@@ -1,6 +1,8 @@
+server:
+  port: ${PORT:8080}
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/sk_blog?createDatabaseIfNotExist=true
+    url: jdbc:${CLEARDB_DATABASE_URL:mysql://localhost:3306/sk_blog?createDatabaseIfNotExist=true}
     username: root
     password: Gold2014
   jpa:

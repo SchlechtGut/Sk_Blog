@@ -111,8 +111,6 @@ public class ApiGeneralController {
     @PostMapping(path = "/profile/my" , consumes = {MediaType.APPLICATION_JSON_VALUE})
     @PreAuthorize("isAuthenticated()")
     public TrueOrErrorsResponse editProfile(@RequestBody @Valid ProfileRequest profileRequest, BindingResult bindingResult) {
-        System.out.println(profileRequest);
-
         return apiGeneralService.editProfileWithoutPhoto(profileRequest, bindingResult);
     }
 
