@@ -193,9 +193,21 @@ public class ApiGeneralService {
         return new TrueOrErrorsResponse(true);
     }
     public TrueOrErrorsResponse editProfileWithPhoto(String name, String email, String password, String imagePath) {
-        Map<String, String> errors = new LinkedHashMap<>();
         User user = getCurrentUser();
 
+        user.setName(name);
+        user.setEmail(email);
+        user.setPhoto(imagePath);
+        if(password != null) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+
+        userRepository.save(user);
+        return new TrueOrErrorsResponse(true);
+    }
+
+    public TrueOrErrorsResponse checkCredentials(String name, String email, String password) {
+        Map<String, String> errors = new LinkedHashMap<>();
         if (name.length() < 2 ) {
             errors.put("name", "имя менее 2 символов");
         }
@@ -204,18 +216,8 @@ public class ApiGeneralService {
             errors.put("email", "неверный формат email");
         }
 
-        if (password == null) {
+        if (password != null && password.length() < 6) {
             errors.put("password", "пароль менее 6 символов");
-        }
-
-        if (errors.isEmpty()) {
-            user.setName(name);
-            user.setEmail(email);
-            user.setPassword(passwordEncoder.encode(password));
-            user.setPhoto(imagePath);
-
-            userRepository.save(user);
-            return new TrueOrErrorsResponse(true);
         }
 
         return new TrueOrErrorsResponse(errors);
@@ -261,4 +263,6 @@ public class ApiGeneralService {
 
         globalSettingsRepository.saveAll(List.of(multiuserMode, postPremoderation, statisticsIsPublic));
     }
+
+
 }

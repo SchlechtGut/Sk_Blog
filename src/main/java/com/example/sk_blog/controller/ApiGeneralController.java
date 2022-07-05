@@ -96,6 +96,12 @@ public class ApiGeneralController {
                                             @RequestParam(required = false) String password,
                                             @RequestParam(required = false) MultipartFile photo) throws IOException {
 
+        TrueOrErrorsResponse errors = apiGeneralService.checkCredentials(name, email, password);
+
+         if (!errors.getErrors().isEmpty()) {
+             return errors;
+        }
+
         ResponseEntity<?> entity = resourceStorage.saveNewBookImage(photo, true);
 
         if (entity.getBody() instanceof TrueOrErrorsResponse) {
