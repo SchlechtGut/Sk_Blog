@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,6 +28,7 @@ public class ResourceStorage {
     String uploadPath;
 
     public ResponseEntity<?> saveNewBookImage(MultipartFile file, boolean avatar) throws IOException {
+        System.out.println(uploadPath + "------------------");
         Map<String, String> errors = new LinkedHashMap<>();
 
 //        if (file.getSize() > 1024 * 1024) {

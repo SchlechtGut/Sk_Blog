@@ -22,6 +22,17 @@ The app is a blog in which users can share their posts. Beside users there also 
 The frontend however was there in the first place so all the work was about backend only.
 
 
+## Project setup
+
+Environment variables:
+
+DATABASE_URL - DB connection with login and password 
+
+```
+npm install
+npm run serve
+```
+
 
 
 
