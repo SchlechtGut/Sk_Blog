@@ -21,6 +21,9 @@ The app is a blog in which users can share their posts. Beside users there also 
 
 The frontend however was there in the first place so all the work was about backend only.
 
+<p align="center">
+<img src="https://media.giphy.com/media/184evEfMtF1ilDS5Qp/giphy.gif" width="80%">
+</p>
 
 ## Project setup
 
@@ -29,10 +32,12 @@ Environment variables:
 DATABASE_URL - DB connection with login and password 
 
 ```
-npm install
-npm run serve
+mvn spring-boot:run -Dspring-boot.run.arguments="--DATABASE_URL=mysql://sql11503529:SVjZn6rkyA@sql11.freemysqlhosting.net:3306/sql11503529?useUnicode=true&characterEncoding=utf-8&reconnect=true"
 ```
 
+Also a link to heroku deploy:
+
+https://aytasov-java-blog-skillbox.herokuapp.com/
 
 
 
